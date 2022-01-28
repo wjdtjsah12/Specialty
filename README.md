@@ -1,2 +1,1 @@
-# Specialty
-Hanghae 5th Spring-Java-Specialty
+항해99 5기 3주차 주특기 입문 개인과제 업로드 완료.
