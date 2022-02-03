@@ -1,5 +1,7 @@
-package com.sparta.week03.domain;
+package com.sparta.week03.model;
 
+import com.sparta.week03.domain.Timestamped;
+import com.sparta.week03.dto.MemoRequestDto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
