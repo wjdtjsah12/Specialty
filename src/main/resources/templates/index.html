@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
-
+    <script src="basic.js"></script>
 
     <style>
         @import url(//spoqa.github.io/spoqa-han-sans/css/SpoqaHanSans-kr.css);
@@ -495,8 +495,13 @@
 
 <div class="wrap">
     <div class="header">
-        <h2>항해99 개인과제</h2>
+        <h2>항해 99 블로그</h2>
+        <span th:text="${username}"></span>님의 블로그
     </div>
+
+    <form id="my_form" method="post" action="/user/logout">
+        <a id="logout-text" href="javascript:{}" onclick="document.getElementById('my_form').submit();">로그아웃</a>
+    </form>
 
     <!-- Button trigger modal -->
     <button type="button" class="btn btn-primary" id="modal_show">
@@ -538,32 +543,32 @@
     </div>
 
     <div id="cards-box" class="area-read">
-        <div class="card">
-            <!-- date/username 영역 -->
-            <div class="metadata">
-                <div class="date">
-                    October 10, 2020
-                </div>
-                <div class="username">
-                    anonymous
-                </div>
-            </div>
-            <!-- contents 조회/수정 영역-->
-            <div class="contents">
-                <div id="1-contents" class="text">
-                    dsafnkalfklewakflekelafkleajfkleafkldsankflenwaklfnekwlafneklwanfkelawnfkelanfkleanfklew
-                </div>
-                <div id="1-editarea" class="edit">
-                    <textarea id="1-textarea" class="te-edit" name="" id="" cols="30" rows="5"></textarea>
-                </div>
-            </div>
-            <!-- 버튼 영역-->
-            <div class="footer">
-                <img id="1-edit" class="icon-start-edit" src="edit.png" alt="" onclick="editPost('1')">
-                <img id="1-delete" class="icon-delete" src="delete.png" alt="" onclick="deleteOne('1')">
-                <img id="1-submit" class="icon-end-edit" src="done.png" alt="" onclick="submitEdit('1')">
-            </div>
-        </div>
+<!--        <div class="card">-->
+<!--            &lt;!&ndash; date/username 영역 &ndash;&gt;-->
+<!--            <div class="metadata">-->
+<!--                <div class="date">-->
+<!--                    October 10, 2020-->
+<!--                </div>-->
+<!--                <div class="username">-->
+<!--                    anonymous-->
+<!--                </div>-->
+<!--            </div>-->
+<!--            &lt;!&ndash; contents 조회/수정 영역&ndash;&gt;-->
+<!--            <div class="contents">-->
+<!--                <div id="1-contents" class="text">-->
+<!--                    dsafnkalfklewakflekelafkleajfkleafkldsankflenwaklfnekwlafneklwanfkelawnfkelanfkleanfklew-->
+<!--                </div>-->
+<!--                <div id="1-editarea" class="edit">-->
+<!--                    <textarea id="1-textarea" class="te-edit" name="" id="" cols="30" rows="5"></textarea>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--            &lt;!&ndash; 버튼 영역&ndash;&gt;-->
+<!--            <div class="footer">-->
+<!--                <img id="1-edit" class="icon-start-edit" src="edit.png" alt="" onclick="editPost('1')">-->
+<!--                <img id="1-delete" class="icon-delete" src="delete.png" alt="" onclick="deleteOne('1')">-->
+<!--                <img id="1-submit" class="icon-end-edit" src="done.png" alt="" onclick="submitEdit('1')">-->
+<!--            </div>-->
+<!--        </div>-->
     </div>
 </div>
 </body>
