@@ -2,6 +2,7 @@ package com.sparta.week03.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -10,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Configuration
 @EnableWebSecurity // 스프링 Security 지원을 가능하게 함
+@EnableGlobalMethodSecurity(securedEnabled = true) // @Secured 어노테이션 활성화
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
@@ -37,8 +39,19 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/css/**").permitAll()
                 // 회원 관리 처리 API 전부를 login 없이 허용
                 .antMatchers("/user/**").permitAll()
-                // 그 외 어떤 요청이든 '인증'
-                .anyRequest().authenticated()
+
+                // 페이지 이동 api 허용
+                .antMatchers("/move/details").permitAll()
+                .antMatchers("/").permitAll()
+
+                // 댓글 GET API 허용
+                .antMatchers("/api/comments/**").permitAll()
+
+                // 게시글 GET API는 허용
+                .antMatchers("/api/memos/**").permitAll()
+
+//                // 그 외 어떤 요청이든 '인증'
+//                .anyRequest().authenticated()
                 .and()
                     // [로그인 기능]
                     .formLogin()
@@ -56,6 +69,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                     .logout()
                     // 로그아웃 요청 처리 URL
                     .logoutUrl("/user/logout")
-                    .permitAll();
+                    .permitAll()
+                .and()
+                    .exceptionHandling()
+                    // "접근 불가" 페이지 URL 설정
+                    .accessDeniedPage("/forbidden.html");
     }
 }
