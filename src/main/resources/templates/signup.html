@@ -11,39 +11,23 @@
     <meta charset="UTF-8">
     <title>회원가입 페이지</title>
     <script>
-//         function onclickAdmin() {
-// // Get the checkbox
-//             var checkBox = document.getElementById("admin-check");
-// // Get the output text
-//             var box = document.getElementById("admin-token");
-//
-// // If the checkbox is checked, display the output text
-//             if (checkBox.checked == true){
-//                 box.style.display = "block";
-//             } else {
-//                 box.style.display = "none";
-//             }
-//         }
     </script>
 </head>
 <body>
 <div id="login-form">
-    <div id="login-title">항해99 블로그 회원가입</div>
+    <div id="login-title">블로그 회원가입</div>
 
-    <form action="/user/signup" method="post">
+    <form th:action="@{/user/signup}" method="post" modelAttribute="signupRequestDto">
+        <p name="errorMessage" th:style="${'color: red; font-size:14px;'}" class="validation-warning" th:text="${errorMessage}">&nbsp;</p>
         <div class="login-id-label">Nickname</div>
-        <input type="text" name="username" placeholder="nickname" class="login-input-box">
+        <input class="login-input-box" type="text" name="username" placeholder="nickname" th:value="${signupRequestDto.username}">
 
         <div class="login-id-label">Password</div>
         <input type="password" name="password" class="login-input-box">
 
-<!--        <div class="login-id-label">E-mail</div>-->
-<!--        <input type="text" name="email" placeholder="E-mail" class="login-input-box">-->
+        <div class="login-id-label">Password Check</div>
+        <input type="password" name="passwordcheck" class="login-input-box">
 
-<!--        <div>-->
-<!--            <input id="admin-check" type="checkbox" name="admin" onclick="onclickAdmin()" style="margin-top: 40px;">관리자-->
-<!--            <input id="admin-token" type="password" name="adminToken" placeholder="관리자 암호" class="login-input-box" style="display:none">-->
-<!--        </div>-->
         <button id="login-id-submit">회원 가입</button>
     </form>
 </div>

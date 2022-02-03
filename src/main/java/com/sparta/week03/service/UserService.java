@@ -1,30 +1,17 @@
 package com.sparta.week03.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sparta.week03.dto.KakaoUserInfoDto;
 import com.sparta.week03.dto.SignupRequestDto;
 import com.sparta.week03.model.User;
 import com.sparta.week03.repository.UserRepository;
-import com.sparta.week03.security.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.validation.Errors;
+import org.springframework.validation.FieldError;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class UserService {
@@ -38,125 +25,59 @@ public class UserService {
     }
 
     public void registerUser(SignupRequestDto requestDto) {
-// 회원 ID 중복 확인
-        String username = requestDto.getUsername();
-        Optional<User> found = userRepository.findByUsername(username);
-        if (found.isPresent()) {
-            throw new IllegalArgumentException("중복된 사용자 ID 가 존재합니다.");
-        }
+        // 회원 ID 중복 및 유효성 검사
+        String username = checkUsername(requestDto);
 
-// 패스워드 암호화
+        //패스워드 유효성 검사
+        checkPassword(requestDto);
+
+        // 패스워드 암호화
         String password = passwordEncoder.encode(requestDto.getPassword());
 
         User user = new User(username, password);
         userRepository.save(user);
     }
 
-    public void kakaoLogin(String code) throws JsonProcessingException {
-        // 1. "인가 코드"로 "액세스 토큰" 요청
-        String accessToken = getAccessToken(code);
-
-        // 2. 토큰으로 카카오 API 호출
-        KakaoUserInfoDto kakaoUserInfo = getKakaoUserInfo(accessToken);
-        
-        // 3. 필요시에 회원가입
-        User kakaoUser = registerKakaoUserIfNeeded(kakaoUserInfo);
-
-        // 4. 강제 로그인 처리
-        forceLogin(kakaoUser);
-    }
-
-    private KakaoUserInfoDto getKakaoUserInfo(String accessToken) throws JsonProcessingException {
-        // HTTP Header 생성
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + accessToken);
-        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
-
-        // HTTP 요청 보내기
-        HttpEntity<MultiValueMap<String, String>> kakaoUserInfoRequest = new HttpEntity<>(headers);
-        RestTemplate rt = new RestTemplate();
-        ResponseEntity<String> response = rt.exchange(
-                "https://kapi.kakao.com/v2/user/me",
-                HttpMethod.POST,
-                kakaoUserInfoRequest,
-                String.class
-        );
-
-        String responseBody = response.getBody();
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode = objectMapper.readTree(responseBody);
-        Long id = jsonNode.get("id").asLong();
-        String nickname = jsonNode.get("properties")
-                .get("nickname").asText();
-        String email = jsonNode.get("kakao_account")
-                .get("email").asText();
-
-        System.out.println("카카오 사용자 정보: " + id + ", " + nickname + ", " + email);
-
-        return new KakaoUserInfoDto(id, nickname, email);
-    }
-
-    private User registerKakaoUserIfNeeded(KakaoUserInfoDto kakaoUserInfo) {
-        // DB 에 중복된 Kakao Id 가 있는지 확인
-        Long kakaoId = kakaoUserInfo.getId();
-        User kakaoUser = userRepository.findByKakaoId(kakaoId)
-                .orElse(null);
-        if (kakaoUser == null) {
-            // 회원가입
-            // username: kakao nickname
-            String nickname = kakaoUserInfo.getNickname();
-
-            // password: random UUID
-            String password = UUID.randomUUID().toString();
-            String encodedPassword = passwordEncoder.encode(password);
-
-            // email: kakao email
-            String email = kakaoUserInfo.getEmail();
-
-            kakaoUser = new User(nickname, encodedPassword, kakaoId);
-            userRepository.save(kakaoUser);
+    private String checkUsername(SignupRequestDto requestDto) {
+        String username = requestDto.getUsername();
+        Optional<User> found = userRepository.findByUsername(username);
+        if (found.isPresent()) {
+            throw new IllegalArgumentException("중복된 사용자 닉네임이 존재합니다.");
         }
-        return kakaoUser;
+        int length = username.length();
+        if (length < 3 || length > 15){
+            throw new IllegalArgumentException("닉네임은 3 ~ 15 자리로 입력해주세요");
+        }
+
+        if(!username.matches(".*[a-zA-Z0-9].*")){
+            throw new IllegalArgumentException("닉네임에는 영문 및 숫자가 반드시 포함되어야 합니다.");
+        }
+        return username;
     }
 
-    private void forceLogin(User kakaoUser) {
-        UserDetails userDetails = new UserDetailsImpl(kakaoUser);
-        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+    private void checkPassword(SignupRequestDto requestDto) {
+        if(requestDto.getPassword().contains(requestDto.getUsername())){
+            throw new IllegalArgumentException("닉네임은 패스워드에 포함 될 수 없습니다.");
+        }
+
+        if(!requestDto.getPassword().equals((requestDto.getPasswordcheck()))){
+            throw new IllegalArgumentException("패스워드와 패스워드 확인이 다릅니다.");
+        }
+
+        int length = requestDto.getPassword().length();
+        if(length < 4 || length > 16) {
+            throw new IllegalArgumentException("패스워드는 4 ~ 16자로 입력해주세요.");
+        }
+
     }
 
-
-
-
-    private String getAccessToken(String code) throws JsonProcessingException {
-        // HTTP Header 생성
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
-
-        // HTTP Body 생성
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("grant_type", "authorization_code");
-        body.add("client_id", "d88e711bf09b111ba1bb1c500ee40c92");
-        body.add("redirect_uri", "http://localhost:8080/user/kakao/callback");
-        body.add("code", code);
-
-        // HTTP 요청 보내기
-        HttpEntity<MultiValueMap<String, String>> kakaoTokenRequest =
-                new HttpEntity<>(body, headers);
-        RestTemplate rt = new RestTemplate();
-        // 서버대 서버 요청은 RestTemplate로 호출을 해야함
-        ResponseEntity<String> response = rt.exchange(
-                "https://kauth.kakao.com/oauth/token",
-                HttpMethod.POST,
-                kakaoTokenRequest,
-                String.class
-        );
-
-        // HTTP 응답 (JSON) -> 액세스 토큰 파싱
-        String responseBody = response.getBody();
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode = objectMapper.readTree(responseBody);
-
-        return jsonNode.get("access_token").asText();
+    // Controller에서 유효성 검사에 실패한 필드가 있다면, Service 계층으로 Errors 객체를 전달하여 비즈니스 로직을 구현합니다.
+    public Map<String, String> validateHandling(Errors errors) {
+        Map<String, String> validatorResult = new HashMap<>();
+        for (FieldError error : errors.getFieldErrors()) {
+            String validKeyName = String.format("valid_%s", error.getField());
+            validatorResult.put(validKeyName, error.getDefaultMessage());
+        }
+        return validatorResult;
     }
 }
